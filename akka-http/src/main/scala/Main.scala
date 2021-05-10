@@ -39,9 +39,7 @@ object MyHttpResponse {
       "origin" -> "https://www.ebay.com",
       "accept-language" -> "zh-CN,zh;q=0.8")
 
-    println("This get response: ")
-    val query: Array[String] = url.replace("https://www.ebay.com/", "").split("/")
-    println(query(1))
+    println(url)
 
     val result = getResponse(url, header)
     println(result.length)  
@@ -57,12 +55,39 @@ object MyHttpResponse {
     writefile(sp)
   }
 
+  def getDll(url: String): Unit = {
+
+    val header = Map(
+      "accept" -> "*/*",
+      "origin" -> "https://www.ebay.com",
+      "accept-language" -> "zh-CN,zh;q=0.8")
+
+    println(url)
+
+    val result = getResponse(url, header)
+    println(result.length)  
+
+    var title = "Item Title: " //reg
+    var tmin = result.indexOf(title) + title.length + "</b>".length
+    var tmax = 0
+    var tout = tmin
+
+    for(tout <- tmin to tmin + 999 if tmax==0) {
+      if(result(tout) == '<') { 
+        tmax = tout 
+      }
+      //print(":"+ tout +":")
+    }
+    println(tmin + ":" + tmax)
+    println(result.substring(tmin, tmax))
+  }
+
   def writefile(sp: Array[String]) {
     //val pattern = new Regex("href=(.)</a></li>")
     val out = new FileWriter("/Users/hank/Documents/temp/ebay.txt", true)
     //out.write(str)
 
-    var st = "";
+    var st = ""
     for(s <- sp) {
       var s_ = s.substring(0, s.indexOf(":"))
       if(! st.equals(s_)) {
@@ -80,11 +105,15 @@ object MyHttpResponse {
   def main(args: Array[String]): Unit = {
     //val url = "https://www.ebay.com/b/Womens-Clothing/15724/bn_661783"
     //curl 'https://offer.ebay.com/ws/eBayISAPI.dll?ViewBidsLogin&item=132179024122&rt=nc&_trksid=p2047675.l2564' -o 132179024122.html
+    
+    /* 1. */
     val url = "https://cn.ebay.com/b/Womens-Accessories/4251/bn_1519247?rt=nc&_pgn=1"
-    val data = getData(url)
-    //println(data)
+    //val data = getData(url)
 
-    //writefile(data)
+    /* 2. */
+    val dll = "https://offer.ebay.com/ws/eBayISAPI.dll?ViewBidsLogin&item=133460204727&rt=nc"
+    getDll(dll)
+
     //hdfs()
   }
 
