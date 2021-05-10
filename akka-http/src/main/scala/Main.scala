@@ -6,16 +6,12 @@ import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.client.LaxRedirectStrategy
 import org.apache.http.util.EntityUtils
 
+import scala.io.Source
+import scala.util.matching.Regex
+
 import java.io.FileWriter
 import java.io.File
-import scala.io.Source
 
-import java.net.URI;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
 object MyHttpResponse {
 
@@ -36,53 +32,8 @@ object MyHttpResponse {
     EntityUtils.toString(response.getEntity, "UTF-8")    // 获取返回结果
   }
 
-  def getData(data: String): Unit = {
-    var arr: Array[String] = data.split(",") 
-    println(arr.length)
-
-    var res = new Array[String](50)
-    var len = 0
-    for (i <- 0 to(arr.length - 1)) {
-      if (arr(i).indexOf("qtyPurchased") > 0 || arr(i).indexOf("totalQty") > 0) {
-        //.replace("\"", "")
-        res(len) = arr(i)
-        len += 1
-        println(arr(i))
-      } 
-    }
-    println(len +"_"+ res(0))
-  }
-
-  def writefile(str: String) {
-    val pattern = new Regex("href=(.)</a></li>")
-    val out = new FileWriter("/home/hank/Templates/spark-js/ebay.txt", true)
-
-    out.write(str)
-    out.close()
-
-  }
-
-  def hdfs() {
-    val config = new Configuration()
-
-    val hdfs = FileSystem.get(new URI("hdfs://10.100.163.16:9000"), config, "spark")
-    val path = new Path("/home/NOTICE.txt")
-
-    println("===========:"+hdfs.exists(path))
-
-    if (hdfs.exists(path)) {
-        val inputStream = hdfs.open(path)
-        val stat = hdfs.getFileStatus(path)
-        val length = stat.getLen.toInt
-        println("===========1:"+stat)
-        println("===========2:"+length)
-      }
-
-    hdfs.close()
-  }
-
-  def main(args: Array[String]): Unit = {
-    val url = "https://www.ebay.com/b/Womens-Clothing/15724/bn_661783"
+  def getData(url: String): Unit = {
+    
     val header = Map(
       "accept" -> "*/*",
       "origin" -> "https://www.ebay.com",
@@ -96,12 +47,44 @@ object MyHttpResponse {
     println(result.length)  
     println(result.indexOf("<link rel=\"canonical\""))
     println(result.indexOf("<!--M/--></ul></section><!--M/-->"))
-    val data = result.substring(result.indexOf("<link rel=\"canonical\""), result.indexOf("<!--M/--></ul></section><!--M/-->"))
     
-    //getData(data)
+    val data = result.substring(result.indexOf("<link rel=\"canonical\""), result.indexOf("<!--M/--></ul></section><!--M/-->"))
+
+    var sp = result.split("ebay.com/itm/")
+    sp(0) = ":"
+    //println(sp(0))
+
+    writefile(sp)
+  }
+
+  def writefile(sp: Array[String]) {
+    //val pattern = new Regex("href=(.)</a></li>")
+    val out = new FileWriter("/Users/hank/Documents/temp/ebay.txt", true)
+    //out.write(str)
+
+    var st = "";
+    for(s <- sp) {
+      var s_ = s.substring(0, s.indexOf(":"))
+      if(! st.equals(s_)) {
+        st = s_
+        println(s_)
+        out.write(s_)
+        out.write("\n") 
+      }
+    }
+
+    out.close()
+  }
+
+
+  def main(args: Array[String]): Unit = {
+    //val url = "https://www.ebay.com/b/Womens-Clothing/15724/bn_661783"
+    //curl 'https://offer.ebay.com/ws/eBayISAPI.dll?ViewBidsLogin&item=132179024122&rt=nc&_trksid=p2047675.l2564' -o 132179024122.html
+    val url = "https://cn.ebay.com/b/Womens-Accessories/4251/bn_1519247?rt=nc&_pgn=1"
+    val data = getData(url)
     //println(data)
 
-    writefile(data)
+    //writefile(data)
     //hdfs()
   }
 
