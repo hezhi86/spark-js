@@ -80,6 +80,58 @@ object MyHttpResponse {
     }
     println(tmin + ":" + tmax)
     println(result.substring(tmin, tmax))
+
+    /* 2. */
+    var qmin = result.indexOf("Date of Purchase")
+    var qmax = result.indexOf("""new EbayConfig("BidHistory.Image")""")
+    println(qmin +"#"+ qmax)
+    
+    val temp = result.substring(qmin, qmax)
+    val data = temp.substring(temp.indexOf("""alt=" ">"""), temp.indexOf("</table>")).replaceAll("</td>", "")
+    //println(data)
+    
+    val sb = StringBuilder.newBuilder
+    var sp = data.split("</tr>")
+    for(ss <- sp) {
+      //println("---- "+ss)
+        //i <- (0 until ss.length).reverse
+        var tmax = 0; var tmin = 0
+        for(i <- 0 to ss.length-1) {
+          if(ss(i)=='>') tmin = i
+          if(ss(i)=='<') tmax = i      
+
+          if(tmax >tmin+1) {
+            print(" #"+ (tmax - tmin) +":")
+            print(ss.substring(tmin+1, tmax))
+            tmin=0; tmax=0
+          }
+      }
+      println(" ====")
+    }
+
+    for(s <- sp) {
+      //println("--"+s)
+      var ss = ""
+      var in = 0
+      var ou = 0
+      var i = 0
+      for (i <- 0 to s.length-1) {
+        if(s(i)=='>') in = i
+        if(s(i)=='<') ou = i
+        if(ou > in+1 && in >0 && ou >0) {          
+          ss = s.substring(in, ou)
+          //print(ss)
+          sb.append(ss)
+          in = 0
+          ou = 0
+        }
+      }
+      if(ss.length > 0) {
+        sb.append('\n')
+      }
+    }
+
+    //println(sb)
   }
 
   def writefile(sp: Array[String]) {
@@ -94,7 +146,7 @@ object MyHttpResponse {
         st = s_
         println(s_)
         out.write(s_)
-        out.write("\n") 
+        out.write('\n') 
       }
     }
 
@@ -111,7 +163,7 @@ object MyHttpResponse {
     //val data = getData(url)
 
     /* 2. */
-    val dll = "https://offer.ebay.com/ws/eBayISAPI.dll?ViewBidsLogin&item=133460204727&rt=nc"
+    val dll = "https://offer.ebay.com/ws/eBayISAPI.dll?ViewBidsLogin&item=274434388200&rt=nc"
     getDll(dll)
 
     //hdfs()
